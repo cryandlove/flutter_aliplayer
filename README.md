@@ -30,7 +30,7 @@
 | --- | --- |
 | Android | 保留原有平台实现，本次鸿蒙适配不代表已完成 Android 全量回归 |
 | iOS | 保留原有平台实现，本次鸿蒙适配不代表已完成 iOS 全量回归 |
-| 鸿蒙（OHOS） | 新增基础 URL 播放接入，具体能力与限制见下文 |
+| 鸿蒙（OHOS） | 新增 URL 播放与点播/直播鉴权播放入口，具体能力与限制见下文 |
 
 鸿蒙侧当前已接入的接口与回调：
 
@@ -38,12 +38,31 @@
 - URL 播放源、拖动进度、自动播放、循环播放、静音、音量与倍速设置。
 - 当前进度、缓冲位置、时长、视频宽高查询，以及清屏。
 - 准备完成、首帧显示、播放完成、拖动完成、错误、信息、加载状态及视频尺寸变化回调。
+- 点播/直播鉴权播放源：`setVidAuth`、`setVidSts`、`setVidMps`、`setLiveSts`，支持 `region`、`quality`/`forceQuality`、`definitionList`、`playConfig`、`previewTime` 等通用参数映射。
+- 凭证过期自动刷新：`setOnVidAuthExpiredListener`、`setOnURLSourceExpiredListener`（Dart 侧回调返回新凭证后继续播放），以及 `updateVidAuth` 主动更新。
+
+鸿蒙侧接口接入矩阵（以 `AliyunPlayer-7.18.0.har` 实际能力为准）：
+
+| Dart 方法 | 鸿蒙状态 |
+| --- | --- |
+| `setUrl` | 已接入 |
+| `setVidAuth` | 已接入 |
+| `setVidSts` | 已接入 |
+| `setVidMps` | 已接入 |
+| `setLiveSts` | 已接入 |
+| `updateVidAuth` | 已接入 |
+| `setOnVidAuthExpiredListener` / `removeOnVidAuthExpiredListener` | 已接入 |
+| `setOnURLSourceExpiredListener` / `removeOnURLSourceExpiredListener` | 已接入 |
+| 列表播放（`AliListPlayer`） | 未接入，返回 `notImplemented` |
+| 预加载（`MediaLoader`） | 未接入，返回 `notImplemented` |
+| 下载器 | 未接入，返回 `notImplemented` |
+| 直播时移（`LiveShiftPlayer`） | 未接入，返回 `notImplemented` |
 
 以上范围根据当前源码列出，不等同于已完成鸿蒙真机全量验证，也不代表 Android、iOS、鸿蒙三端接口完全一致。
 
 ### 鸿蒙已知限制
 
-- 尚未接入 VidAuth、VidSts、列表播放、直播时移、下载、预加载、截图、字幕及画面旋转/镜像/缩放等接口；不得直接将后文原有接口示例视为鸿蒙可用能力。
+- 尚未接入列表播放、直播时移、下载、预加载、截图、字幕及画面旋转/镜像/缩放等接口；不得直接将后文原有接口示例视为鸿蒙可用能力。
 - `setOnStateChanged` 目前仅有注册应答，尚未转发对应的原生状态变化事件。
 - `initService`、`initLicenseServiceForIOS` 在鸿蒙侧仍为占位实现，调用成功不表示已完成授权初始化。
 - 未实现的方法会返回 `notImplemented`，调用方应避免调用或处理相应的平台异常。

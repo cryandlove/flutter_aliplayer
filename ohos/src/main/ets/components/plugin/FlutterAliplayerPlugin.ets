@@ -1,5 +1,6 @@
 import common from '@ohos.app.ability.common';
 import {
+  BinaryMessenger,
   EventChannel,
   EventSink,
   FlutterPlugin,
@@ -67,6 +68,7 @@ const LICENSE_PLACEHOLDER_METHODS: Set<string> = new Set<string>([
 export default class FlutterAliplayerPlugin implements FlutterPlugin, MethodCallHandler {
   private channel: MethodChannel | null = null;
   private appContext: common.Context | null = null;
+  private binaryMessenger: BinaryMessenger | null = null;
   private readonly eventSink: PlayerEventSink = new PlayerEventSink();
   private readonly viewFactory: FlutterAliPlayerViewFactory = new FlutterAliPlayerViewFactory();
   private readonly players: Map<string, FlutterAliPlayer> = new Map<string, FlutterAliPlayer>();
@@ -79,6 +81,7 @@ export default class FlutterAliplayerPlugin implements FlutterPlugin, MethodCall
     Log.i(TAG, 'onAttachedToEngine');
     this.appContext = binding.getApplicationContext();
     const messenger = binding.getBinaryMessenger();
+    this.binaryMessenger = messenger;
 
     this.channel = new MethodChannel(messenger, FACTORY_CHANNEL_NAME);
     this.channel.setMethodCallHandler(this);
@@ -104,6 +107,7 @@ export default class FlutterAliplayerPlugin implements FlutterPlugin, MethodCall
       this.channel.setMethodCallHandler(null);
       this.channel = null;
     }
+    this.binaryMessenger = null;
     this.eventSink.setSink(null);
     this.releaseAllPlayers();
   }
@@ -154,6 +158,41 @@ export default class FlutterAliplayerPlugin implements FlutterPlugin, MethodCall
       }
       case 'setUrl': {
         this.withPlayer(playerId, result, (player) => player.setUrl(String(arg)));
+        return;
+      }
+      case 'setVidAuth': {
+        this.withPlayer(playerId, result, (player) => player.setVidAuth(this.requireMap(arg)));
+        return;
+      }
+      case 'setVidSts': {
+        this.withPlayer(playerId, result, (player) => player.setVidSts(this.requireMap(arg)));
+        return;
+      }
+      case 'setVidMps': {
+        this.withPlayer(playerId, result, (player) => player.setVidMps(this.requireMap(arg)));
+        return;
+      }
+      case 'setLiveSts': {
+        this.withPlayer(playerId, result, (player) => player.setLiveSts(this.requireMap(arg)));
+        return;
+      }
+      case 'updateVidAuth': {
+        this.withPlayer(playerId, result, (player) => player.updateVidAuth(this.requireMap(arg)));
+        return;
+      }
+      case 'setOnVidAuthExpiredListener':
+      case 'setOnURLSourceExpiredListener': {
+        const messenger = this.binaryMessenger;
+        if (messenger == null) {
+          result.error('NO_CONTEXT', 'FlutterPluginBinding is detached', null);
+          return;
+        }
+        const enable: boolean = Boolean(arg);
+        if (call.method === 'setOnVidAuthExpiredListener') {
+          this.withPlayer(playerId, result, (player) => player.setOnVidAuthExpiredListener(messenger, enable));
+        } else {
+          this.withPlayer(playerId, result, (player) => player.setOnUrlSourceExpiredListener(messenger, enable));
+        }
         return;
       }
       case 'prepare': {
@@ -273,8 +312,16 @@ export default class FlutterAliplayerPlugin implements FlutterPlugin, MethodCall
       result.error('PLAYER_NOT_FOUND', `no player for id ${playerId}`, null);
       return;
     }
-    action(player);
-    result.success(null);
+    try {
+      action(player);
+      result.success(null);
+    } catch (error) {
+      const message: string = String(error);
+      const code: string = message.indexOf('INVALID_ARGUMENT') >= 0
+        ? 'INVALID_ARGUMENT'
+        : 'OHOS_PLAYER_ERROR';
+      result.error(code, message, null);
+    }
   }
 
   private withPlayerResult(playerId: string, result: MethodResult, action: (player: FlutterAliPlayer) => ESObject): void {
@@ -298,5 +345,12 @@ export default class FlutterAliplayerPlugin implements FlutterPlugin, MethodCall
     for (const playerId of Array.from(this.players.keys())) {
       this.releasePlayer(playerId);
     }
+  }
+
+  private requireMap(arg: ESObject): Record<string, ESObject> {
+    if (arg == null || typeof arg !== 'object' || arg instanceof Array) {
+      throw new Error('INVALID_ARGUMENT: source arguments must be an object');
+    }
+    return arg as Record<string, ESObject>;
   }
 }
