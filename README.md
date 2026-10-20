@@ -10,6 +10,7 @@
 - 本仓库 Flutter 插件版本：`7.18.0`，见 [pubspec.yaml](./pubspec.yaml)。该版本号不代表本仓库已独立发布到 pub.dev。
 - 鸿蒙原生播放器依赖：`AliyunPlayer-7.18.0.har`，见 [ohos/oh-package.json5](./ohos/oh-package.json5)。
 - 原项目版权与许可声明：见 [LICENSE](./LICENSE)。
+- 官方说明：见[阿里云官方文档](https://help.aliyun.com/zh/vod/developer-reference/overview-15?spm=a2c4g.11186623.help-menu-29932.d_5_2_0.75496158iPh3UX)
 
 本次修改主要位于 Flutter 插件的平台桥接与鸿蒙适配层，不表示重新实现了阿里云原生播放器内核，也不代表获得了阿里云官方认证或背书。
 
