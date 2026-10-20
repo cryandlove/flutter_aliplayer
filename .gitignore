@@ -5,6 +5,7 @@
 example/build/
 example/.dart_tool/
 example/.vscode/
+example/.flutter-plugins-dependencies
 
 .dart_tool/
 .vscode/
