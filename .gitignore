@@ -1,0 +1,10 @@
+
+# FVM Version Cache
+.fvm/
+
+example/build/
+example/.dart_tool/
+example/.vscode/
+
+.dart_tool/
+.vscode/

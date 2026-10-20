@@ -1,0 +1,10 @@
+{
+  "module": {
+    "name": "flutter_aliplayer",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet"
+    ]
+  }
+}

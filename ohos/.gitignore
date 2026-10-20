@@ -1,0 +1,12 @@
+/node_modules
+/oh_modules
+/local.properties
+/.idea
+**/build
+/.hvigor
+.cxx
+**/oh-package-lock.json5
+BuildProfile.ets
+
+# flutter 工具链在构建时注入的引擎 har，不入库
+/libs/flutter.har

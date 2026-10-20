@@ -1,0 +1,12 @@
+{
+  "name": "flutter_aliplayer",
+  "version": "7.9.0",
+  "description": "Aliyun Player With Flutter (ohos implementation).",
+  "main": "Index.ets",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@ohos/flutter_ohos": "file:libs/flutter.har",
+    "premierlibrary": "file:./libs/AliyunPlayer-7.18.0.har"
+  }
+}

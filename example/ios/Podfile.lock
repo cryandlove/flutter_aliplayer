@@ -1,0 +1,49 @@
+PODS:
+  - AliPlayerSDK_iOS (7.18.0):
+    - AliPlayerSDK_iOS/AliPlayerSDK (= 7.18.0)
+  - AliPlayerSDK_iOS/AliPlayerSDK (7.18.0)
+  - AliPlayerSDK_iOS_ARTC (7.18.0):
+    - AliPlayerSDK_iOS_ARTC/AliPlayerSDK (= 7.18.0)
+  - AliPlayerSDK_iOS_ARTC/AliPlayerSDK (7.18.0)
+  - Flutter (1.0.0)
+  - flutter_aliplayer (7.18.0):
+    - Flutter
+    - flutter_aliplayer/AliPlayerSDKFrameworks (= 7.18.0)
+    - MJExtension
+  - flutter_aliplayer/AliPlayerSDKFrameworks (7.18.0):
+    - AliPlayerSDK_iOS (= 7.18.0)
+    - AliPlayerSDK_iOS_ARTC (= 7.18.0)
+    - Flutter
+    - MJExtension
+    - RtsSDK (= 7.12.0)
+  - MJExtension (3.4.2)
+  - RtsSDK (7.12.0)
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - flutter_aliplayer (from `.symlinks/plugins/flutter_aliplayer/ios`)
+
+SPEC REPOS:
+  trunk:
+    - AliPlayerSDK_iOS
+    - AliPlayerSDK_iOS_ARTC
+    - MJExtension
+    - RtsSDK
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  flutter_aliplayer:
+    :path: ".symlinks/plugins/flutter_aliplayer/ios"
+
+SPEC CHECKSUMS:
+  AliPlayerSDK_iOS: a977314d3cd4808e114babfb9392bf1dbea1c25d
+  AliPlayerSDK_iOS_ARTC: f791a30ef79181ad0c18008185824b971cea89e2
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_aliplayer: 236b959c331194b798ca4b5337d16b0d4cc71e7f
+  MJExtension: e97d164cb411aa9795cf576093a1fa208b4a8dd8
+  RtsSDK: 0f9668d1d40a9471b28e3d87cabad38c5004ed32
+
+PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
+
+COCOAPODS: 1.16.2
