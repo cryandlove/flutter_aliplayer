@@ -113,14 +113,14 @@ export default class FlutterAliplayerPlugin implements FlutterPlugin, MethodCall
   }
 
   onMethodCall(call: MethodCall, result: MethodResult): void {
-    const args: ESObject = call.args as ESObject;
+    const args: Record<string, ESObject> | null = this.toRecord(call.args);
     let playerId: string = '';
     let arg: ESObject = null;
     if (args != null) {
-      if (args.playerId != null) {
-        playerId = String(args.playerId);
+      if (args['playerId'] != null) {
+        playerId = String(args['playerId']);
       }
-      arg = args.arg;
+      arg = args['arg'] ?? null;
     }
 
     if (FLAG_METHODS.has(call.method)) {
@@ -226,9 +226,9 @@ export default class FlutterAliplayerPlugin implements FlutterPlugin, MethodCall
         return;
       }
       case 'seekTo': {
-        const seekArg = arg as Record<string, ESObject>;
-        const position: number = Number(seekArg?.position ?? 0);
-        const seekMode: number = Number(seekArg?.seekMode ?? 0);
+        const seekArg: Record<string, ESObject> | null = this.toRecord(arg);
+        const position: number = Number(seekArg != null ? seekArg['position'] : 0);
+        const seekMode: number = Number(seekArg != null ? seekArg['seekMode'] : 0);
         this.withPlayer(playerId, result, (player) => player.seekTo(position, seekMode));
         return;
       }
@@ -347,10 +347,30 @@ export default class FlutterAliplayerPlugin implements FlutterPlugin, MethodCall
     }
   }
 
+  /**
+   * flutter_ohos 的 StandardMessageCodec 把 Dart 侧 Map 解码成 ArkTS Map 实例
+   * （不是普通对象），直接属性访问会得到 undefined，这里统一转成 Record。
+   */
+  private toRecord(value: ESObject): Record<string, ESObject> | null {
+    if (value == null || typeof value !== 'object' || value instanceof Array) {
+      return null;
+    }
+    if (value instanceof Map) {
+      const map: Map<string, ESObject> = value as Map<string, ESObject>;
+      const record: Record<string, ESObject> = {};
+      for (const key of Array.from(map.keys())) {
+        record[key] = map.get(key) as ESObject;
+      }
+      return record;
+    }
+    return value as Record<string, ESObject>;
+  }
+
   private requireMap(arg: ESObject): Record<string, ESObject> {
-    if (arg == null || typeof arg !== 'object' || arg instanceof Array) {
+    const record: Record<string, ESObject> | null = this.toRecord(arg);
+    if (record == null) {
       throw new Error('INVALID_ARGUMENT: source arguments must be an object');
     }
-    return arg as Record<string, ESObject>;
+    return record;
   }
 }
