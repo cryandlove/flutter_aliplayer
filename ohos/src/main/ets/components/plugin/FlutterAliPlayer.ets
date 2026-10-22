@@ -313,6 +313,10 @@ export class FlutterAliPlayer {
     return this.player.getVolume();
   }
 
+  setEnableHardwareDecoder(enable: boolean): void {
+    this.player.enableHardwareDecoder(enable);
+  }
+
   seekTo(position: number, seekMode: number): void {
     this.player.seekTo(position, seekMode);
   }

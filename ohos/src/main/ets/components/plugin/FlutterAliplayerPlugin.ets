@@ -72,6 +72,8 @@ export default class FlutterAliplayerPlugin implements FlutterPlugin, MethodCall
   private readonly eventSink: PlayerEventSink = new PlayerEventSink();
   private readonly viewFactory: FlutterAliPlayerViewFactory = new FlutterAliPlayerViewFactory();
   private readonly players: Map<string, FlutterAliPlayer> = new Map<string, FlutterAliPlayer>();
+  /** viewId → playerId：XComponent onLoad 后按此映射把播放器绑到对应 XComponent。 */
+  private readonly viewPlayerBinding: Map<number, string> = new Map<number, string>();
 
   getUniqueClassName(): string {
     return 'FlutterAliplayerPlugin';
@@ -146,12 +148,30 @@ export default class FlutterAliplayerPlugin implements FlutterPlugin, MethodCall
         return;
       }
       case 'setPlayerView': {
-        const view: FlutterAliPlayerPlatformView | null = this.viewFactory.findView(Number(arg));
+        const viewId: number = Number(arg);
+        const view: FlutterAliPlayerPlatformView | null = this.viewFactory.findView(viewId);
         const player: FlutterAliPlayer | null = this.players.get(playerId) ?? null;
         if (view == null || player == null) {
           Log.w(TAG, `setPlayerView ignored: view=${view != null}, player=${player != null}`);
+          result.success(null);
+          return;
+        }
+        // 登记 viewId → playerId 绑定，并挂 surface 就绪回调：
+        // XComponent onLoad 完成后按官方原子接入约定（libraryname 加载 SO +
+        // setSurfaceId 传 XComponent id）绑定播放器，消除绑定竞态。
+        this.viewPlayerBinding.set(viewId, playerId);
+        view.onSurfaceReady = (_realSurfaceId: string): void => {
+          this.bindSurface(viewId);
+        };
+        view.onDisposed = (): void => {
+          this.viewPlayerBinding.delete(viewId);
+        };
+        const readySurfaceId: string | null = view.surfaceId;
+        if (readySurfaceId != null) {
+          Log.i(TAG, `setPlayerView: surface already ready for view ${viewId}, bind now`);
+          this.bindSurface(viewId);
         } else {
-          player.setSurfaceId(view.xComponentId);
+          Log.i(TAG, `setPlayerView: surface not ready for view ${viewId}, will bind on xComponent onLoad`);
         }
         result.success(null);
         return;
@@ -292,6 +312,10 @@ export default class FlutterAliplayerPlugin implements FlutterPlugin, MethodCall
         this.withPlayerResult(playerId, result, (player) => player.getVideoHeight());
         return;
       }
+      case 'setEnableHardwareDecoder': {
+        this.withPlayer(playerId, result, (player) => player.setEnableHardwareDecoder(Boolean(arg)));
+        return;
+      }
       case 'clearScreen':
       case 'clearScreenSync': {
         this.withPlayer(playerId, result, (player) => player.clearScreen());
@@ -331,6 +355,34 @@ export default class FlutterAliplayerPlugin implements FlutterPlugin, MethodCall
       return;
     }
     result.success(action(player));
+  }
+
+  /**
+   * 按官方原子接入约定绑定播放器与 XComponent：
+   * XComponent 带 libraryname: 'premierlibrary' 加载播放器 SO，SDK 通过
+   * 原生 XComponent 回调拿到渲染窗口；setSurfaceId 传的是 XComponent 的
+   * id 字符串（官方 Demo：id='0'、setSurfaceId('0')），用于把播放器实例
+   * 关联到对应的 XComponent。surface 未就绪时 setPlayerView 只登记映射，
+   * XComponent onLoad 后由 onSurfaceReady 回调触发这里。
+   */
+  private bindSurface(viewId: number): void {
+    const boundPlayerId: string | undefined = this.viewPlayerBinding.get(viewId);
+    if (boundPlayerId == null) {
+      Log.w(TAG, `bindSurface ignored: no player bound for view ${viewId}`);
+      return;
+    }
+    const view: FlutterAliPlayerPlatformView | null = this.viewFactory.findView(viewId);
+    if (view == null) {
+      Log.w(TAG, `bindSurface ignored: view ${viewId} not found`);
+      return;
+    }
+    const player: FlutterAliPlayer | null = this.players.get(boundPlayerId) ?? null;
+    if (player == null) {
+      Log.w(TAG, `bindSurface ignored: player ${boundPlayerId} not found`);
+      return;
+    }
+    Log.i(TAG, `bindSurface: view=${viewId} player=${boundPlayerId} xComponentId=${view.xComponentId}`);
+    player.setSurfaceId(view.xComponentId);
   }
 
   private releasePlayer(playerId: string): void {
